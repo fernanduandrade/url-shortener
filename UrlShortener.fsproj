@@ -3,7 +3,6 @@
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Blog.fs" />
     <Compile Include="UrlShorter.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>

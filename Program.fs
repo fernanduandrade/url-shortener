@@ -1,11 +1,9 @@
-
 open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Microsoft.AspNetCore.Hosting
 
 open Giraffe
-open Blog
 open UrlShorter
 open StackExchange.Redis
 open Microsoft.AspNetCore.Http
@@ -83,12 +81,7 @@ module Program =
             next ctx
 
 
-    let webApp = 
-        let blogDb = new BlogDb()
-
-        let serviceTree = {
-            getBlogDb = fun () -> blogDb
-        }
+    let webApp =
 
         let urlDb = new UrlDb()
 
@@ -97,24 +90,11 @@ module Program =
         }
         
         choose[
-            route "/" >=>  text "iamanapi"
             routeBind<HashIdParam> "/go/{hashId}" handleGetRoute
-            
-            subRoute "/posts"
-                (
-                    choose [
-                        route "/save" 
-                            >=> POST
-                            >=> warbler (fun _->
-                                (saveUrlHttpHandler serviceUrlTree))
-                        route "" >=> GET >=> warbler (fun _ -> 
-                            (getPostsHttpHandler serviceTree))
-                        route "/create"
-                            >=> POST
-                            >=> warbler (fun _ -> 
-                                (createPostHttpHandler serviceTree))
-                    ]
-                )
+            route "/create" 
+                >=> POST
+                >=> warbler (fun _->
+                    (saveUrlHttpHandler serviceUrlTree))
         ]
 
     let configureApp (app: IApplicationBuilder) =
