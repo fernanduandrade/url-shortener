@@ -23,7 +23,7 @@ module Program =
         member this.SaveToRedis (newUrl: UrlShorterType) =
             let config =
                 HashidConfiguration.create 
-                    { HashidConfiguration.defaultOptions with Salt = "c157e16e-53ed-4ad9-931a-ccd474cda033" }
+                    { HashidConfiguration.defaultOptions with Salt = System.Guid.NewGuid().ToString() }
             
             let encode = Hashid.encode64 config
             let id = encode [| 73L; 88L |]
