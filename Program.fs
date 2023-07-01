@@ -7,7 +7,7 @@ open Giraffe
 open UrlShorter
 open StackExchange.Redis
 open Microsoft.AspNetCore.Http
-open Hashids
+open Hash
 
 module Program =
     let redisConfiguration = ConfigurationOptions()
@@ -15,38 +15,16 @@ module Program =
 
     let redisConnection = ConnectionMultiplexer.Connect(redisConfiguration)
     let db = redisConnection.GetDatabase()
-    let value = db.StringGet "fernando"
 
     type UrlDb() =
         member this.SaveToRedis (newUrl: UrlShorterType) =
-            let config =
-                HashidConfiguration.create 
-                    { HashidConfiguration.defaultOptions with Salt = System.Guid.NewGuid().ToString() }
-            
-            let encode = Hashid.encode64 config
-            let id = encode [| 73L; 88L |]
-            let randomStr = 
-                let chars = "ABCDEFGHIJKLMNOPQRSTUVWUXYZ0123456789"
-                let charsLen = chars.Length
-                let random = System.Random()
 
-                fun len -> 
-                    let randomChars = [|for i in 0..len -> chars.[random.Next(charsLen)]|]
-                    new System.String(randomChars)
-
-            let a = randomStr
-            printf "teste %A" a
+            let id = Hash.GenerateNewHash()
             db.StringSet(id, newUrl.url) |> ignore
             let result = {
                 hashid = id
             }
-            result
-
-        member this.RedirectToSite () =
-            fun (next: HttpFunc) (ctx: HttpContext) ->
-                let urlFromRedis = db.StringGet("baZhqO")
-                (string)urlFromRedis
-                
+            result                
 
     type UrLServiceTree = {
         getUrlDb: unit -> UrlDb
@@ -61,15 +39,6 @@ module Program =
                     urlShorter = $"http://localhost:5218/go/{result.hashid}"
                 }
                 return! json (test) next ctx
-            }
-
-    let redirectUrlHttpHandler (serivceTree: UrLServiceTree) =
-        fun(next: HttpFunc) (ctx: HttpContext) ->
-            task {
-                let hashId = ctx.Request.RouteValues["hashId"]
-                let urlFromRedis = db.StringGet("baZhqO")
-                ctx.Response.Redirect((string)urlFromRedis)
-                return! next ctx
             }
 
     let handleGetRoute (hashIdParam: HashIdParam) : HttpHandler =
@@ -101,6 +70,7 @@ module Program =
         app.UseGiraffe (webApp)
 
     let configureServices (services: IServiceCollection) =
+        services.AddSingleton
         services.AddGiraffe() |> ignore
     let exitCode = 0
 

@@ -1,9 +1,5 @@
 module UrlShorter
 
-open System
-open Giraffe
-open StackExchange.Redis
-open HashIdentity
 
 [<CLIMutable>]
 type UrlShorterType = {
