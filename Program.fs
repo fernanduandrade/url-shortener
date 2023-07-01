@@ -7,7 +7,6 @@ open Giraffe
 open UrlShorter
 open StackExchange.Redis
 open Microsoft.AspNetCore.Http
-open Hash
 
 module Program =
     let redisConfiguration = ConfigurationOptions()
@@ -16,29 +15,19 @@ module Program =
     let redisConnection = ConnectionMultiplexer.Connect(redisConfiguration)
     let db = redisConnection.GetDatabase()
 
-    type UrlDb() =
-        member this.SaveToRedis (newUrl: UrlShorterType) =
+                   
 
-            let id = Hash.GenerateNewHash()
-            db.StringSet(id, newUrl.url) |> ignore
-            let result = {
-                hashid = id
-            }
-            result                
-
-    type UrLServiceTree = {
-        getUrlDb: unit -> UrlDb
-    }
+    
 
     let saveUrlHttpHandler (serivceTree: UrLServiceTree) =
         fun(next: HttpFunc) (ctx: HttpContext) ->
             task {
                 let! url = ctx.BindJsonAsync<UrlShorterType>()
-                let result = serivceTree.getUrlDb().SaveToRedis(url)
-                let test = {
+                let result = serivceTree.getUrlService().SaveToRedis(url)
+                let result = {
                     urlShorter = $"http://localhost:5218/go/{result.hashid}"
                 }
-                return! json (test) next ctx
+                return! json (result) next ctx
             }
 
     let handleGetRoute (hashIdParam: HashIdParam) : HttpHandler =
@@ -52,10 +41,10 @@ module Program =
 
     let webApp =
 
-        let urlDb = new UrlDb()
+        let urlDb = new UrlService()
 
         let serviceUrlTree = {
-            getUrlDb = fun () -> urlDb
+            getUrlService = fun () -> urlDb
         }
         
         choose[
@@ -70,7 +59,6 @@ module Program =
         app.UseGiraffe (webApp)
 
     let configureServices (services: IServiceCollection) =
-        services.AddSingleton
         services.AddGiraffe() |> ignore
     let exitCode = 0
 
