@@ -6,18 +6,13 @@ open Redis
 open Giraffe
 
 module Program =
+    open UrlShorter
 
     let webApp =
         choose [
-            
+            routeBind<UrlShortParam> "/go/{hashId}" Handlers.handleRedirectToUrl
+            route "/create" >=> POST >=> Handlers.handleCreateHashUrl
         ]
-        // choose[
-        //     routeBind<UrlShortParam> "/go/{hashId}" handleGetRoute
-        //     route "/create" 
-        //         >=> POST
-        //         >=> warbler (fun _->
-        //             (saveUrlHttpHandler serviceUrlTree))
-        // ]
 
     let configureApp (app: IApplicationBuilder) =
         app.UseGiraffe (webApp)
