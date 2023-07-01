@@ -7,30 +7,8 @@ open Giraffe
 open UrlShorter
 open Redis
 open StackExchange.Redis
-open Microsoft.AspNetCore.Http
 
 module Program =
-
-    let saveUrlHttpHandler (serivceTree: UrLServiceTree) =
-        fun(next: HttpFunc) (ctx: HttpContext) ->
-            task {
-                let! url = ctx.BindJsonAsync<UrlShorterType>()
-                let result = serivceTree.getUrlService().SaveToRedis(url)
-                let result = {
-                    urlShorter = $"http://localhost:5218/go/{result.hashid}"
-                }
-                return! json (result) next ctx
-            }
-
-    let handleGetRoute (hashIdParam: HashIdParam): HttpHandler =
-        let value =
-            let db = configureRedis()
-            let strValue = db.StringGet(hashIdParam.HashId)
-            (string) strValue 
-        fun (next: HttpFunc) (ctx : HttpContext) -> 
-            ctx.Response.Redirect(value)
-            next ctx
-
 
     let webApp =
 
@@ -42,7 +20,7 @@ module Program =
         }
         
         choose[
-            routeBind<HashIdParam> "/go/{hashId}" handleGetRoute 
+            routeBind<HashIdParam> "/go/{hashId}" handleGetRoute
             route "/create" 
                 >=> POST
                 >=> warbler (fun _->
@@ -50,8 +28,6 @@ module Program =
         ]
 
     let configureApp (app: IApplicationBuilder) =
-        
-        let db = configureRedis()
         app.UseGiraffe (webApp)
 
     let configureServices (services: IServiceCollection) =
