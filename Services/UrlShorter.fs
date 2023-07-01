@@ -1,6 +1,7 @@
 module UrlShorter
 
 open Hash
+open StackExchange.Redis
 
 [<CLIMutable>]
 type UrlShorterType = {
@@ -11,10 +12,10 @@ type UrlResult = {
     hashid: string
 }
 
-type UrlService() =
+type UrlService(db: IDatabase) =
     member this.SaveToRedis (newUrl: UrlShorterType) =
-        let id = Hash.GenerateNewHash()
-        //db.StringSet(id, newUrl.url) |> ignore
+        let id = generateNewHash
+        db.StringSet(id, newUrl.url) |> ignore
         let result = {
             hashid = id
         }

@@ -5,6 +5,7 @@
   <ItemGroup>
     <Compile Include="Helpers/Hash.fs" />
     <Compile Include="Services/UrlShorter.fs" />
+    <Compile Include="Setup/RedisService.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <ItemGroup>
