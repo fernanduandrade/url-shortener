@@ -2,7 +2,6 @@ open Microsoft.AspNetCore.Builder
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Microsoft.AspNetCore.Hosting
-open Redis
 open Giraffe
 
 module Program =
@@ -10,7 +9,7 @@ module Program =
 
     let webApp =
         choose [
-            routeBind<UrlShortParam> "/go/{hashId}" Handlers.handleRedirectToUrl
+            routef "/go/%s" Handlers.handleRedirectToUrl
             route "/create" >=> POST >=> Handlers.handleCreateHashUrl
         ]
 
@@ -18,7 +17,6 @@ module Program =
         app.UseGiraffe (webApp)
 
     let configureServices (services: IServiceCollection) =
-        services.AddSingleton<RedisRepository>(RedisRepository()) |> ignore
         services.AddGiraffe() |> ignore
         
     let exitCode = 0

@@ -5,23 +5,22 @@ open UrlShorter
 open Giraffe
 open Redis
 open Hash
+open Redis
 
 let handleCreateHashUrl =
     fun(next: HttpFunc) (ctx: HttpContext) ->
         task {
             let! url = ctx.BindJsonAsync<UrlShorterType>()
             let hashId = generateNewHash()
-            let redis = ctx.GetService<RedisRepository>()
-            redis.Create(hashId, url.url)
+            CreateCache (hashId, url.url)
             let result = {
                 urlShorter = $"http://localhost:5218/go/{hashId}"
             }
             return! json (result) next ctx
         }
 
-let handleRedirectToUrl (hashIdParam: UrlShortParam) =
+let handleRedirectToUrl (hashParam: string) =
         fun (next: HttpFunc) (ctx : HttpContext) ->
-            let redis = ctx.GetService<RedisRepository>()
-            let urlValue = redis.GetValueByKey(hashIdParam.HashId)
+            let urlValue = GetValueByKey hashParam
             ctx.Response.Redirect((string)urlValue)
             next ctx
